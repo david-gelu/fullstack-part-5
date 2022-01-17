@@ -1,0 +1,43 @@
+/* * {
+  margin: 0;
+  padding: 0;
+} */
+.App {
+  text-align: center;
+  background: lightblue;
+  min-height: 100vh;
+}
+
+.erorr {
+  color: red;
+  background: lightgrey;
+  font-size: 20px;
+  border-style: solid;
+  border-radius: 5px;
+  padding: 10px;
+  margin-bottom: 10px;
+}
+.success {
+  color: green;
+  background: lightgrey;
+  font-size: 20px;
+  border-style: solid;
+  border-radius: 5px;
+  padding: 10px;
+  margin-bottom: 10px;
+}
+
+.mr-1 {
+  margin-right: 0.25em;
+  display: block;
+}
+.mr-2 {
+  margin-right: 0.5em;
+}
+
+h1,
+footer {
+  color: green;
+  font-style: italic;
+  line-height: 1.5;
+}
