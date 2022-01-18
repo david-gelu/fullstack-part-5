@@ -3,17 +3,20 @@ import Blog from './components/Blog'
 import blogService from './services/blogs'
 import loginService from './services/login'
 import './AppCss.css'
+import LoginForm from './components/LoginForm'
+import Togglable from './components/Togglable'
+import BlogForm from './components/BlogForm'
 
 const App = () => {
   const [blogs, setBlogs] = useState([])
-
+  const [formVisible, setFormVisible] = useState(false)
   const [username, setUsername] = useState('')
   const [password, setPassword] = useState('')
   const [user, setUser] = useState(null)
 
-  const [blogTitle, setBlogTitle] = useState("")
-  const [blogAuthor, setBlogAuthor] = useState("")
-  const [blogUrl, setBlogUrl] = useState("")
+  const [blogTitle, setBlogTitle] = useState('')
+  const [blogAuthor, setBlogAuthor] = useState('')
+  const [blogUrl, setBlogUrl] = useState('')
   const [blogLikes, setBlogLikes] = useState(0)
 
   const [errorMessage, setErrorMessage] = useState(null)
@@ -26,13 +29,7 @@ const App = () => {
   }, [])
 
   useEffect(() => {
-    blogService.getAll().then(blogs =>
-      setBlogs(blogs)
-    )
-  }, [])
-
-  useEffect(() => {
-    const loggedBlogUser = window.localStorage.getItem("loggedBlogUser")
+    const loggedBlogUser = window.localStorage.getItem('loggedBlogUser')
     if (loggedBlogUser) {
       const user = JSON.parse(loggedBlogUser)
       setUser(user)
@@ -40,23 +37,19 @@ const App = () => {
     }
   }, [])
 
-  const loginForm = () => (
-    <form onSubmit={handleLogin}>
-      <div>
-        username
-        <input type="text" value={username} name="Username"
-          onChange={({ target }) => setUsername(target.value)}
+  const loginForm = () => {
+    return (
+      <Togglable buttonLabel='log in'>
+        <LoginForm
+          username={username}
+          password={password}
+          handleUsernameChange={({ target }) => setUsername(target.value)}
+          handlePasswordChange={({ target }) => setPassword(target.value)}
+          handleSubmit={handleLogin}
         />
-      </div>
-      <div>
-        password
-        <input type="password" value={password} name="Password"
-          onChange={({ target }) => setPassword(target.value)}
-        />
-      </div>
-      <button type="submit">login</button>
-    </form>
-  )
+      </Togglable>
+    )
+  }
 
   const handleLogin = async (event) => {
     event.preventDefault()
@@ -80,7 +73,7 @@ const App = () => {
   }
 
   const handleLogout = async () => {
-    window.localStorage.removeItem("loggedBlogUser")
+    window.localStorage.removeItem('loggedBlogUser')
     setUser(null)
   }
 
@@ -95,59 +88,48 @@ const App = () => {
 
     blogService
       .create(addBlog)
-      .then(returnedBlog => {
-        setBlogs(blogs.concat(addBlog))
-        setConfirmMsg({ message: `a new blog ${blogTitle} by ${blogAuthor}` })
-        setTimeout(() => {
-          setConfirmMsg(null)
-        }, 5000)
-        setBlogTitle("")
-        setBlogLikes("")
-        setBlogAuthor("")
-        setBlogUrl("")
-      })
       .catch(error => {
         setErrorMessage(`${error}`)
         setTimeout(() => {
           setErrorMessage(null)
         }, 5000)
       })
+    let returnedBlog = blogService.getAll()
+    setBlogs(returnedBlog)
+    setConfirmMsg({ message: `a new blog ${blogTitle} by ${blogAuthor}` })
+    setTimeout(() => {
+      setConfirmMsg(null)
+    }, 5000)
+    setBlogTitle('')
+    setBlogLikes('')
+    setBlogAuthor('')
+    setBlogUrl('')
 
   }
 
-  const createBlog = () => {
+
+  const toggleVisibility = () => {
+    setFormVisible(!formVisible)
+  }
+
+  const blogFormParent = () => {
     return (
-      <div>
-        <form onSubmit={(e) => { handleCreateBlog(e) }}>
-          <span className='mr-1'>
-            blog title:
-            <input type="text" value={blogTitle} name="blogTitle"
-              onChange={({ target }) => setBlogTitle(target.value)}
-            />
-          </span>
-          <span className='mr-1'>
-            blog author:
-            <input type="text" value={blogAuthor} name="blogAuthor"
-              onChange={({ target }) => setBlogAuthor(target.value)}
-            />
-          </span>
-          <span className='mr-1'>
-            blog url:
-            <input type="text" value={blogUrl} name="blogUrl"
-              onChange={({ target }) => setBlogUrl(target.value)}
-            />
-          </span>
-          <span className='mr-1'>
-            blog likes:
-            <input type="number" value={blogLikes} name="blogLikes"
-              onChange={({ target }) => setBlogLikes(target.value)}
-            />
-          </span>
-          <button type="submit">Create blog</button>
-        </form>
-      </div>
+      !formVisible ?
+        <Togglable buttonLabel='new blog'>
+          <h2>Create a new blog</h2>
+          <form onSubmit={(e) => { handleCreateBlog(e) }}>
+            <BlogForm text='blog title' type='text' name='blogTitle' onChange={({ target }) => setBlogTitle(target.value)} />
+            <BlogForm text='blog author' type='text' name='blogAuthor' onChange={({ target }) => setBlogAuthor(target.value)} />
+            <BlogForm text='blog url' type='text' name='blogUrl' onChange={({ target }) => setBlogUrl(target.value)} />
+            <BlogForm text='blog likes' type='number' name='blogLikes' onChange={({ target }) => setBlogLikes(target.value)} />
+            <input type={'submit'} onSubmit={(e) => { handleCreateBlog(e) }} />
+          </form>
+        </Togglable>
+        :
+        <button onClick={toggleVisibility}>Cancel</button>
     )
   }
+  const sortedBlogs = blogs.sort((a, b) => b.likes - a.likes)
 
   return (
     <div>
@@ -159,13 +141,11 @@ const App = () => {
         loginForm() :
         <div>
           <span className='mr-2'><strong>{user.name}</strong> logged-in</span> <button onClick={handleLogout}>Logout</button>
-          {createBlog()}
-          {blogs.map(blog =>
-            <Blog key={blog.id} blog={blog} />
-          )}
+          {blogFormParent()}
+          {sortedBlogs.map(blog => <Blog key={blog.id} blog={blog} />)}
         </div>
       }
-      <footer>Creating fullstack app is hard, if u are a junior :{`)`}</footer>
+      <footer>Creating fullstack app is hard, if u are a junior :D</footer>
     </div>
   )
 }
